@@ -2,59 +2,53 @@ package main
 
 import (
 	"fmt"
-	"syscall"
+	"net"
 
 	"github.com/somenzz/ewechat"
 )
 
-func checkDiskSpace(path string, threshold float64) {
-	var ewechat = ewechat.EWechat{
-		CorpID:     CFG.EWeChat.CorpID,
-		CorpSecret: CFG.EWeChat.CorpSecret,
-		AgentID:    CFG.EWeChat.AgentID,
-	}
-	fs := syscall.Statfs_t{}
-	err := syscall.Statfs(path, &fs)
+func getLocalIP() ([]string, error) {
+	var ips []string
+	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		fmt.Printf("Error getting filesystem info: %s\n", err)
-		return
+		return nil, err
 	}
-
-	// Available blocks * size per block = available space
-	available := float64(fs.Bavail * uint64(fs.Bsize))
-	// Total blocks * size per block = total space
-	total := float64(fs.Blocks * uint64(fs.Bsize))
-
-	// Calculate the percentage of free disk space
-	percentFree := (available / total) * 100
-	var msg string
-	fmt.Println(threshold)
-	if percentFree < threshold {
-		msg = fmt.Sprintf("Warning: Disk space is %.2f%% and below %.2f%% on %s\n", percentFree, threshold, path)
-		ewechat.SendMessage(msg, CFG.EWeChat.Receivers)
-	} else {
-		msg = fmt.Sprintf("Disk space is sufficient (%.2f%% free) on %s\n", percentFree, path)
-
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ips = append(ips, ipnet.IP.String())
+			}
+		}
 	}
-	fmt.Println(msg)
-
+	return ips, nil
 }
 
 func main() {
+
+	ips, err := getLocalIP()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	for _, ip := range ips {
+		fmt.Println("Local machine IP address:", ip)
+	}
+
 	var ewechat = ewechat.EWechat{
 		CorpID:     CFG.EWeChat.CorpID,
 		CorpSecret: CFG.EWeChat.CorpSecret,
 		AgentID:    CFG.EWeChat.AgentID,
 	}
-
+	msg_prefix := fmt.Sprintf("IP address: %s", ips[0])
 	disk, err := InitDisk()
+
 	if err != nil {
-		ewechat.SendMessage(fmt.Sprintf("disk read error: %s", err.Error()), CFG.EWeChat.Receivers)
+		ewechat.SendMessage(fmt.Sprintf("%s disk read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
 	}
 
 	if disk.UsedPercent > CFG.DiskUsageRate {
 
-		msg := fmt.Sprintf("Warning: Disk usage rate is %.2f%% and over DiskUsageRate %.2f%%", disk.UsedPercent, CFG.DiskUsageRate)
+		msg := fmt.Sprintf("%s Warning: Disk usage rate is %.2f%% and over DiskUsageRate %.2f%%", msg_prefix, disk.UsedPercent, CFG.DiskUsageRate)
 		// fmt.Println(msg)
 		ewechat.SendMessage(msg, CFG.EWeChat.Receivers)
 
@@ -62,12 +56,12 @@ func main() {
 
 	cpu, err := InitCPU()
 	if err != nil {
-		ewechat.SendMessage(fmt.Sprintf("cpu read error: %s", err.Error()), CFG.EWeChat.Receivers)
+		ewechat.SendMessage(fmt.Sprintf("%s cpu read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
 	}
 
 	if cpu.Cpus[0] > CFG.DiskUsageRate {
 
-		msg := fmt.Sprintf("Warning: CPU usage rate is %.2f%% and over DiskUsageRate %.2f%%", cpu.Cpus[0], CFG.DiskUsageRate)
+		msg := fmt.Sprintf("%s Warning: CPU usage rate is %.2f%% and over DiskUsageRate %.2f%%", msg_prefix, cpu.Cpus[0], CFG.DiskUsageRate)
 		// fmt.Println(msg)
 		ewechat.SendMessage(msg, CFG.EWeChat.Receivers)
 
@@ -75,12 +69,12 @@ func main() {
 
 	ram, err := InitRAM()
 	if err != nil {
-		ewechat.SendMessage(fmt.Sprintf("ram read error: %s", err.Error()), CFG.EWeChat.Receivers)
+		ewechat.SendMessage(fmt.Sprintf("%s ram read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
 	}
 
 	if ram.UsedPercent > CFG.MemUsageRate {
 
-		msg := fmt.Sprintf("Warning: Ram usage rate is %.2f%% and over DiskUsageRate %.2f%%", ram.UsedPercent, CFG.MemUsageRate)
+		msg := fmt.Sprintf("%s Warning: Ram usage rate is %.2f%% and over DiskUsageRate %.2f%%", msg_prefix, ram.UsedPercent, CFG.MemUsageRate)
 		// fmt.Println(msg)
 		ewechat.SendMessage(msg, CFG.EWeChat.Receivers)
 

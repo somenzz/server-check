@@ -32,7 +32,7 @@ go build && ./server-check
 ### Use crontab for regular monitoring
 
 ```sh
-*/5 * * * * /path/to/your/server-check
+*/5 * * * * cd /path/to/your && /path/to/your/server-check
 ```
 If you use Windows, use Scheduled Task Execution.
 
