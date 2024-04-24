@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
+	"os"
+	"path/filepath"
 
 	"github.com/somenzz/ewechat"
 )
@@ -25,13 +28,26 @@ func getLocalIP() ([]string, error) {
 
 func main() {
 
+	// Get the path to the executable.
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Resolve the directory of the executable.
+	exePath := filepath.Dir(exe)
+	log.Println("working path:", exePath)
+	// Change the working directory to the executable's directory.
+	err = os.Chdir(exePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ips, err := getLocalIP()
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		log.Fatal(err)
 	}
 	for _, ip := range ips {
-		fmt.Println("Local machine IP address:", ip)
+		log.Println("Local machine IP address:", ip)
 	}
 
 	var ewechat = ewechat.EWechat{
