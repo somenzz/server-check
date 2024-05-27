@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -22,12 +25,20 @@ type EWeChat struct {
 }
 
 func GetConfig() Config {
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Resolve the directory of the executable.
+	exePath := filepath.Dir(exe)
+
 	viper.SetConfigName("config") // name of config file (without extension)
 	viper.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
 	viper.AddConfigPath(".")      // path to look for the config file in
+	viper.AddConfigPath(exePath)
 
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
+	err = viper.ReadInConfig() // Find and read the config file
+	if err != nil {            // Handle errors reading the config file
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
 
