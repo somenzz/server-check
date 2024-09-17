@@ -15,6 +15,7 @@ type Config struct {
 	DiskUsageRate float64 `mapstructure:"disk_usage_rate"`
 	CpuUsageRate  float64 `mapstructure:"cpu_usage_rate"`
 	MemUsageRate  float64 `mapstructure:"mem_usage_rate"`
+	ApiUrl        string  `mapstructure:"api_url"`
 }
 
 type EWeChat struct {

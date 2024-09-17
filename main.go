@@ -2,13 +2,37 @@ package main
 
 import (
 	"fmt"
+	"github.com/somenzz/ewechat"
+	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/somenzz/ewechat"
 )
+
+func healthCheck(url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("无法访问 %s: %w", url, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("API 返回状态码不正常，状态码: %d，内容: %s", resp.StatusCode, string(body))
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	body_str := string(body)
+	if body_str != `"ok"` {
+		fmt.Println(body_str)
+		return fmt.Errorf("API 返回结果不正确，期望 'ok'，实际: %s", body_str)
+	}
+
+	return nil
+	//return fmt.Errorf("API health") //for test
+}
 
 func getLocalIP() ([]string, error) {
 	var ips []string
@@ -96,4 +120,8 @@ func main() {
 
 	}
 
+	err = healthCheck(CFG.ApiUrl)
+	if err != nil {
+		ewechat.SendMessage(err.Error(), CFG.EWeChat.Receivers)
+	}
 }
