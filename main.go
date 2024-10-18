@@ -6,9 +6,19 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/somenzz/ewechat"
+	"github.com/somenzz/server-check/http_check"
 )
+
+var CFG = GetConfig()
+
+var ewechatSender = ewechat.EWechat{
+	CorpID:     CFG.EWeChat.CorpID,
+	CorpSecret: CFG.EWeChat.CorpSecret,
+	AgentID:    CFG.EWeChat.AgentID,
+}
 
 func getLocalIP() ([]string, error) {
 	var ips []string
@@ -24,6 +34,27 @@ func getLocalIP() ([]string, error) {
 		}
 	}
 	return ips, nil
+}
+
+func CheckUrlIsHealth(url string, expectStatusCode int, expectBody string) {
+
+	maxRetries := 3
+	retryDelay := time.Second * 5
+
+	for i := 0; i < maxRetries; i++ {
+		if http_check.CheckHealth(url, expectStatusCode, expectBody) {
+			log.Printf("Service at %s is healthy\n", url)
+			return
+		}
+
+		if i < maxRetries-1 {
+			log.Printf("Service unhealthy. Retrying in %v...\n", retryDelay)
+			time.Sleep(retryDelay)
+		}
+	}
+
+	ewechatSender.SendMessage(fmt.Sprintf("Service at %s is unhealthy after %d attempts\n", url, maxRetries), CFG.EWeChat.Receivers)
+
 }
 
 func main() {
@@ -50,50 +81,51 @@ func main() {
 		log.Println("Local machine IP address:", ip)
 	}
 
-	var ewechat = ewechat.EWechat{
-		CorpID:     CFG.EWeChat.CorpID,
-		CorpSecret: CFG.EWeChat.CorpSecret,
-		AgentID:    CFG.EWeChat.AgentID,
-	}
 	msg_prefix := fmt.Sprintf("IP address: %s", ips[0])
 	disk, err := InitDisk()
 
 	if err != nil {
-		ewechat.SendMessage(fmt.Sprintf("%s disk read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
+		ewechatSender.SendMessage(fmt.Sprintf("%s disk read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
 	}
 
 	if disk.UsedPercent > CFG.DiskUsageRate {
 
 		msg := fmt.Sprintf("%s Warning: Disk usage rate is %.2f%% and over DiskUsageRate %.2f%%", msg_prefix, disk.UsedPercent, CFG.DiskUsageRate)
 		// fmt.Println(msg)
-		ewechat.SendMessage(msg, CFG.EWeChat.Receivers)
+		ewechatSender.SendMessage(msg, CFG.EWeChat.Receivers)
 
 	}
 
 	cpu, err := InitCPU()
 	if err != nil {
-		ewechat.SendMessage(fmt.Sprintf("%s cpu read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
+		ewechatSender.SendMessage(fmt.Sprintf("%s cpu read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
 	}
 
 	if cpu.Cpus[0] > CFG.CpuUsageRate {
 
 		msg := fmt.Sprintf("%s Warning: CPU usage rate is %.2f%% and over CpuUsageRate %.2f%%", msg_prefix, cpu.Cpus[0], CFG.CpuUsageRate)
 		// fmt.Println(msg)
-		ewechat.SendMessage(msg, CFG.EWeChat.Receivers)
+		ewechatSender.SendMessage(msg, CFG.EWeChat.Receivers)
 
 	}
 
 	ram, err := InitRAM()
 	if err != nil {
-		ewechat.SendMessage(fmt.Sprintf("%s ram read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
+		ewechatSender.SendMessage(fmt.Sprintf("%s ram read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
 	}
 
 	if ram.UsedPercent > CFG.MemUsageRate {
 
 		msg := fmt.Sprintf("%s Warning: Ram usage rate is %.2f%% and over MemUsageRate %.2f%%", msg_prefix, ram.UsedPercent, CFG.MemUsageRate)
 		// fmt.Println(msg)
-		ewechat.SendMessage(msg, CFG.EWeChat.Receivers)
+		ewechatSender.SendMessage(msg, CFG.EWeChat.Receivers)
 
+	}
+
+	//url 健康检查
+
+	for _, url := range CFG.CheckUrl {
+		CheckUrlIsHealth(url.Url, url.ExpectStatusCode, url.ExpectBody)
 	}
 
 }

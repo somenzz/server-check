@@ -11,10 +11,16 @@ import (
 
 // Define a struct that matches the structure of your YAML file
 type Config struct {
-	EWeChat       EWeChat `mapstructure:"ewechat"`
-	DiskUsageRate float64 `mapstructure:"disk_usage_rate"`
-	CpuUsageRate  float64 `mapstructure:"cpu_usage_rate"`
-	MemUsageRate  float64 `mapstructure:"mem_usage_rate"`
+	EWeChat       EWeChat     `mapstructure:"ewechat"`
+	DiskUsageRate float64     `mapstructure:"disk_usage_rate"`
+	CpuUsageRate  float64     `mapstructure:"cpu_usage_rate"`
+	MemUsageRate  float64     `mapstructure:"mem_usage_rate"`
+	CheckUrl      []HttpCheck `mapstructure:"check_url"`
+}
+type HttpCheck struct {
+	Url              string `mapstructure:"url"`
+	ExpectStatusCode int    `mapstructure:"expect_status_code"`
+	ExpectBody       string `mapstructure:"expect_body"`
 }
 
 type EWeChat struct {
@@ -50,5 +56,3 @@ func GetConfig() Config {
 
 	return config
 }
-
-var CFG = GetConfig()
