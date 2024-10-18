@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/somenzz/ewechat"
+
+	"github.com/somenzz/ewechat"
 	"github.com/somenzz/server-check/http_check"
 )
 
