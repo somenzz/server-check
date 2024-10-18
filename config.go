@@ -19,6 +19,7 @@ type Config struct {
 }
 type HttpCheck struct {
 	Url              string `mapstructure:"url"`
+	Method           string `mapstructure:"method"`
 	ExpectStatusCode int    `mapstructure:"expect_status_code"`
 	ExpectBody       string `mapstructure:"expect_body"`
 }

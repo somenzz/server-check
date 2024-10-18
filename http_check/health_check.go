@@ -4,11 +4,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
-func CheckHealth(url string, expectedStatusCode int, expectedBody string) bool {
-	resp, err := http.Get(url)
+func CheckHealth(url string, method string, expectedStatusCode int, expectedBody string) bool {
+	resp, err := http.DefaultClient.Do(&http.Request{
+		Method: func() string {
+			if method == "" {
+				return "GET"
+			}
+			return strings.ToUpper(method)
+		}(),
+		URL: parseURL(url), // Convert string to *url.URL
+	})
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return false
@@ -37,4 +46,10 @@ func CheckHealth(url string, expectedStatusCode int, expectedBody string) bool {
 	}
 
 	return true
+}
+
+// Function to parse string to *url.URL
+func parseURL(rawURL string) *url.URL {
+	parsedURL, _ := url.Parse(rawURL) // Handle error as needed
+	return parsedURL
 }

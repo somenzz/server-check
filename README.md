@@ -3,6 +3,11 @@
 
 When the CPU, disk, and memory usage exceeds the preset value, an enterprise WeChat alarm notification is sent.
 
+## Update log:
+
+Added feature: health check for http service, you can add http check information in config.yaml.
+
+
 ## Configuration file
 
 ```yaml
@@ -14,6 +19,15 @@ ewechat:
 cpu_usage_rate: 90.0  #When the CPU usage exceeds 90, an enterprise WeChat notification will be sent. 
 mem_usage_rate: 90.0  #When the Mem usage exceeds 90, an enterprise WeChat notification will be sent.
 disk_usage_rate: 90.0 #When the Disk usage exceeds 90, an enterprise WeChat notification will be sent.
+check_url:
+  - url: "https://xxxx/api/health"
+    method: get  # this is default
+    expect_status_code: 200 # this is default
+    expect_body: "ok"  # if expect_body is in the resp.Body, it returns true.
+  - url: "https://xxxxx"
+    method: post
+    expect_status_code: 403
+    expect_body: "As long as the returned string contains expect_body, it's a success"
 ```
 
 ## Instructions

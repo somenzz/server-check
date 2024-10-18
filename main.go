@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/somenzz/ewechat"
-
-	"github.com/somenzz/ewechat"
 	"github.com/somenzz/server-check/http_check"
 )
 
@@ -38,13 +36,13 @@ func getLocalIP() ([]string, error) {
 	return ips, nil
 }
 
-func CheckUrlIsHealth(url string, expectStatusCode int, expectBody string) {
+func CheckUrlIsHealth(url, method string, expectStatusCode int, expectBody string) {
 
 	maxRetries := 3
 	retryDelay := time.Second * 5
 
 	for i := 0; i < maxRetries; i++ {
-		if http_check.CheckHealth(url, expectStatusCode, expectBody) {
+		if http_check.CheckHealth(url, method, expectStatusCode, expectBody) {
 			log.Printf("Service at %s is healthy\n", url)
 			return
 		}
@@ -127,7 +125,7 @@ func main() {
 	//url 健康检查
 
 	for _, url := range CFG.CheckUrl {
-		CheckUrlIsHealth(url.Url, url.ExpectStatusCode, url.ExpectBody)
+		CheckUrlIsHealth(url.Url, url.Method, url.ExpectStatusCode, url.ExpectBody)
 	}
 
 }

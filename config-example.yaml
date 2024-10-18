@@ -6,3 +6,12 @@ ewechat:
 cpu_usage_rate: 90.0  #When the CPU usage exceeds 90, an enterprise WeChat notification will be sent. 
 mem_usage_rate: 90.0  #When the Mem usage exceeds 90, an enterprise WeChat notification will be sent.
 disk_usage_rate: 90.0 #When the Disk usage exceeds 90, an enterprise WeChat notification will be sent.
+check_url:
+  - url: "https://xxxx/api/health"
+    method: get  # this is default
+    expect_status_code: 200 # this is default
+    expect_body: "ok" 
+  - url: "https://xxxxx"
+    method: post
+    expect_status_code: 403
+    expect_body: "As long as the returned string contains this, it's a success"
