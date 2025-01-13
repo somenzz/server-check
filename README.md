@@ -5,8 +5,10 @@ When the CPU, disk, and memory usage exceeds the preset value, an enterprise WeC
 
 ## Update log:
 
-Added feature: health check for http service, you can add http check information in config.yaml.
+Added feature: 
 
+- health check for http service, you can add http check information in config.yaml.
+- When cpu exceeds the threshold, the information of the top five processes occupying the CPU is output simultaneously. 
 
 ## Configuration file
 

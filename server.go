@@ -2,11 +2,13 @@ package main
 
 import (
 	"runtime"
+	"sort"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 const (
@@ -48,6 +50,12 @@ type Disk struct {
 	TotalMB     int     `json:"totalMb"`
 	TotalGB     int     `json:"totalGb"`
 	UsedPercent float64 `json:"usedPercent"`
+}
+
+type ProcessInfo struct {
+	Name       string
+	Exe        string
+	CPUPercent float64
 }
 
 //@author: [SliverHorn](https://github.com/SliverHorn)
@@ -115,4 +123,37 @@ func InitDisk() (d Disk, err error) {
 		d.UsedPercent = u.UsedPercent
 	}
 	return d, nil
+}
+
+func InitProcess() (processInfos []ProcessInfo, err error) {
+	processes, err := process.Processes()
+	if err != nil {
+		return processInfos, err
+	}
+
+	for _, p := range processes {
+		cpuPercent, err := p.CPUPercent()
+		if err == nil {
+			cpuPercent = float64(int(cpuPercent*100)) / 100
+		}
+		if err != nil {
+			continue
+		}
+
+		name, _ := p.Name()
+		exe, _ := p.Exe()
+
+		processInfos = append(processInfos, ProcessInfo{
+			Name:       name,
+			Exe:        exe,
+			CPUPercent: cpuPercent,
+		})
+	}
+
+	// Sort processes by CPU usage in descending order
+	sort.Slice(processInfos, func(i, j int) bool {
+		return processInfos[i].CPUPercent > processInfos[j].CPUPercent
+	})
+
+	return processInfos[:5], nil
 }

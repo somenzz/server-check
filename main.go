@@ -91,7 +91,7 @@ func main() {
 	if disk.UsedPercent > CFG.DiskUsageRate {
 
 		msg := fmt.Sprintf("%s Warning: Disk usage rate is %.2f%% and over DiskUsageRate %.2f%%", msg_prefix, disk.UsedPercent, CFG.DiskUsageRate)
-		// fmt.Println(msg)
+		log.Println(msg)
 		ewechatSender.SendMessage(msg, CFG.EWeChat.Receivers)
 
 	}
@@ -103,10 +103,18 @@ func main() {
 
 	if cpu.Cpus[0] > CFG.CpuUsageRate {
 
-		msg := fmt.Sprintf("%s Warning: CPU usage rate is %.2f%% and over CpuUsageRate %.2f%%", msg_prefix, cpu.Cpus[0], CFG.CpuUsageRate)
-		// fmt.Println(msg)
-		ewechatSender.SendMessage(msg, CFG.EWeChat.Receivers)
+		msg := fmt.Sprintf("%s Warning: CPU usage rate is %.2f%% and over CpuUsageRate %.2f%%\n", msg_prefix, cpu.Cpus[0], CFG.CpuUsageRate)
 
+		processInfos, err := InitProcess()
+		if err != nil {
+			ewechatSender.SendMessage(fmt.Sprintf("%s process read error: %s", msg_prefix, err.Error()), CFG.EWeChat.Receivers)
+		}
+		for _, p := range processInfos {
+			msg += fmt.Sprintf("ProcessInfo: %s - %.2f%%\n", p.Exe, p.CPUPercent)
+		}
+		log.Println(msg)
+
+		ewechatSender.SendMessage(msg, CFG.EWeChat.Receivers)
 	}
 
 	ram, err := InitRAM()
@@ -117,7 +125,7 @@ func main() {
 	if ram.UsedPercent > CFG.MemUsageRate {
 
 		msg := fmt.Sprintf("%s Warning: Ram usage rate is %.2f%% and over MemUsageRate %.2f%%", msg_prefix, ram.UsedPercent, CFG.MemUsageRate)
-		// fmt.Println(msg)
+		log.Println(msg)
 		ewechatSender.SendMessage(msg, CFG.EWeChat.Receivers)
 
 	}
