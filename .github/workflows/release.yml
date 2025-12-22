@@ -1,0 +1,72 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build for Linux
+        env:
+          CGO_ENABLED: 0
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o server-check-linux-amd64 .
+
+      - name: Build for Windows
+        env:
+          CGO_ENABLED: 0
+        run: |
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o server-check-windows-amd64.exe .
+
+      - name: Build for macOS (Intel)
+        env:
+          CGO_ENABLED: 0
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o server-check-darwin-amd64 .
+
+      - name: Build for Linux (ARM64)
+        env:
+          CGO_ENABLED: 0
+        run: |
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o server-check-linux-arm64 .
+
+      - name: Build for Windows (ARM64)
+        env:
+          CGO_ENABLED: 0
+        run: |
+          GOOS=windows GOARCH=arm64 go build -ldflags "-s -w" -o server-check-windows-arm64.exe .
+
+      - name: Build for macOS (Apple Silicon)
+        env:
+          CGO_ENABLED: 0
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o server-check-darwin-arm64 .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            server-check-linux-amd64
+            server-check-windows-amd64.exe
+            server-check-darwin-amd64
+            server-check-linux-arm64
+            server-check-windows-arm64.exe
+            server-check-darwin-arm64
+            config-example.yaml
+          generate_release_notes: true
