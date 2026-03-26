@@ -72,7 +72,7 @@ func CheckTcpIsHealth(host string, port int) {
 		}
 
 		if i < maxRetries-1 {
-			log.Printf("TCP Service unhealthy. Retrying in %v...\n", retryDelay)
+			log.Printf("TCP Service %s unhealthy. Retrying in %v...\n", address, retryDelay)
 			time.Sleep(retryDelay)
 		}
 	}
