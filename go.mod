@@ -1,6 +1,6 @@
 module github.com/somenzz/server-check
 
-go 1.22.0
+go 1.25.6
 
 require (
 	github.com/shirou/gopsutil/v3 v3.24.3

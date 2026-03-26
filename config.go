@@ -16,7 +16,14 @@ type Config struct {
 	CpuUsageRate  float64     `mapstructure:"cpu_usage_rate"`
 	MemUsageRate  float64     `mapstructure:"mem_usage_rate"`
 	CheckUrl      []HttpCheck `mapstructure:"check_url"`
+	CheckTcp      []TcpCheck  `mapstructure:"check_tcp"`
 }
+
+type TcpCheck struct {
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
+}
+
 type HttpCheck struct {
 	Url              string `mapstructure:"url"`
 	Method           string `mapstructure:"method"`

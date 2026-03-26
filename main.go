@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/somenzz/ewechat"
@@ -55,6 +56,28 @@ func CheckUrlIsHealth(url, method string, expectStatusCode int, expectBody strin
 
 	ewechatSender.SendMessage(fmt.Sprintf("Service at %s is unhealthy after %d attempts\n", url, maxRetries), CFG.EWeChat.Receivers)
 
+}
+
+func CheckTcpIsHealth(host string, port int) {
+	maxRetries := 3
+	retryDelay := time.Second * 5
+	address := net.JoinHostPort(host, strconv.Itoa(port))
+
+	for i := 0; i < maxRetries; i++ {
+		conn, err := net.DialTimeout("tcp", address, time.Second*5)
+		if err == nil {
+			log.Printf("TCP Service at %s is healthy\n", address)
+			conn.Close()
+			return
+		}
+
+		if i < maxRetries-1 {
+			log.Printf("TCP Service unhealthy. Retrying in %v...\n", retryDelay)
+			time.Sleep(retryDelay)
+		}
+	}
+
+	ewechatSender.SendMessage(fmt.Sprintf("TCP Service at %s is unhealthy after %d attempts\n", address, maxRetries), CFG.EWeChat.Receivers)
 }
 
 func main() {
@@ -134,6 +157,11 @@ func main() {
 
 	for _, url := range CFG.CheckUrl {
 		CheckUrlIsHealth(url.Url, url.Method, url.ExpectStatusCode, url.ExpectBody)
+	}
+
+	//tcp 健康检查
+	for _, tcpConfig := range CFG.CheckTcp {
+		CheckTcpIsHealth(tcpConfig.Host, tcpConfig.Port)
 	}
 
 }
