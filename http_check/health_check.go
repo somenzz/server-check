@@ -1,6 +1,7 @@
 package http_check
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,8 +9,8 @@ import (
 	"strings"
 )
 
-func CheckHealth(url string, method string, expectedStatusCode int, expectedBody string) bool {
-	resp, err := http.DefaultClient.Do(&http.Request{
+func CheckHealth(ctx context.Context, url string, method string, expectedStatusCode int, expectedBody string) bool {
+	req := &http.Request{
 		Method: func() string {
 			if method == "" {
 				return "GET"
@@ -17,7 +18,10 @@ func CheckHealth(url string, method string, expectedStatusCode int, expectedBody
 			return strings.ToUpper(method)
 		}(),
 		URL: parseURL(url), // Convert string to *url.URL
-	})
+	}
+	req = req.WithContext(ctx)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return false

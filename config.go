@@ -17,6 +17,11 @@ type Config struct {
 	MemUsageRate  float64     `mapstructure:"mem_usage_rate"`
 	CheckUrl      []HttpCheck `mapstructure:"check_url"`
 	CheckTcp      []TcpCheck  `mapstructure:"check_tcp"`
+	CheckPid      []PidCheck  `mapstructure:"check_pid"`
+}
+
+type PidCheck struct {
+	Pid string `mapstructure:"pid"`
 }
 
 type TcpCheck struct {
