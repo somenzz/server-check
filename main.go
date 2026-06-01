@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -16,13 +17,9 @@ import (
 	"github.com/somenzz/server-check/http_check"
 )
 
-var CFG = GetConfig()
+var CFG Config
 
-var ewechatSender = ewechat.EWechat{
-	CorpID:     CFG.EWeChat.CorpID,
-	CorpSecret: CFG.EWeChat.CorpSecret,
-	AgentID:    CFG.EWeChat.AgentID,
-}
+var ewechatSender ewechat.EWechat
 
 func sendWechatMessage(message string, receivers string) {
 	msg, err := ewechatSender.SendMessage(message, receivers)
@@ -132,7 +129,32 @@ func CheckPidIsHealth(ctx context.Context, pidFile string) {
 
 }
 
+const Version = "v1.0.5"
+
 func main() {
+	var showVersion bool
+	flag.BoolVar(&showVersion, "v", false, "Print version info")
+	flag.BoolVar(&showVersion, "version", false, "Print version info")
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "server-check is a lightweight tool to check server health (CPU, Memory, Disk), HTTP URLs, TCP ports, and process IDs.\n\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage:\n  server-check [options]\n\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Options:\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  -h, --help      Show this help message\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  -v, --version   Print version info\n")
+	}
+	flag.Parse()
+
+	if showVersion {
+		fmt.Println("server-check version:", Version)
+		return
+	}
+
+	CFG = GetConfig()
+	ewechatSender = ewechat.EWechat{
+		CorpID:     CFG.EWeChat.CorpID,
+		CorpSecret: CFG.EWeChat.CorpSecret,
+		AgentID:    CFG.EWeChat.AgentID,
+	}
 
 	// Get the path to the executable.
 	exe, err := os.Executable()
