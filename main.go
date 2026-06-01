@@ -48,13 +48,13 @@ func getLocalIP() ([]string, error) {
 	return ips, nil
 }
 
-func CheckUrlIsHealth(ctx context.Context, url, method string, expectStatusCode int, expectBody string) {
+func CheckUrlIsHealth(ctx context.Context, url, method string, expectStatusCode int, expectBody string, origin string) {
 
 	maxRetries := 3
 	retryDelay := time.Second * 5
 
 	for i := 0; i < maxRetries; i++ {
-		if http_check.CheckHealth(ctx, url, method, expectStatusCode, expectBody) {
+		if http_check.CheckHealth(ctx, url, method, expectStatusCode, expectBody, origin) {
 			log.Printf("Service at %s is healthy\n", url)
 			return
 		}
@@ -218,7 +218,7 @@ func main() {
 			defer func() { <-sem }()
 			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
-			CheckUrlIsHealth(ctx, u.Url, u.Method, u.ExpectStatusCode, u.ExpectBody)
+			CheckUrlIsHealth(ctx, u.Url, u.Method, u.ExpectStatusCode, u.ExpectBody, u.Origin)
 		}()
 	}
 

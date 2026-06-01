@@ -11,6 +11,7 @@ check_url:
     method: get # this is default
     expect_status_code: 200 # this is default
     expect_body: "ok"
+    origin: "https://example.com"
   - url: "https://xxxxx"
     method: post
     expect_status_code: 403

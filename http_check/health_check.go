@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func CheckHealth(ctx context.Context, url string, method string, expectedStatusCode int, expectedBody string) bool {
+func CheckHealth(ctx context.Context, url string, method string, expectedStatusCode int, expectedBody string, origin string) bool {
 	req := &http.Request{
 		Method: func() string {
 			if method == "" {
@@ -17,7 +17,11 @@ func CheckHealth(ctx context.Context, url string, method string, expectedStatusC
 			}
 			return strings.ToUpper(method)
 		}(),
-		URL: parseURL(url), // Convert string to *url.URL
+		URL:    parseURL(url), // Convert string to *url.URL
+		Header: make(http.Header),
+	}
+	if origin != "" {
+		req.Header.Set("Origin", origin)
 	}
 	req = req.WithContext(ctx)
 

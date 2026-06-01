@@ -34,6 +34,7 @@ type HttpCheck struct {
 	Method           string `mapstructure:"method"`
 	ExpectStatusCode int    `mapstructure:"expect_status_code"`
 	ExpectBody       string `mapstructure:"expect_body"`
+	Origin           string `mapstructure:"origin"`
 }
 
 type EWeChat struct {
